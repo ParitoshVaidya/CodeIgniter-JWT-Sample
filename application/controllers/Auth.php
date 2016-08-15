@@ -25,9 +25,9 @@ class Auth extends REST_Controller
      */
     public function token_get()
     {
-        $token = array();
-        $token['id'] = 1; //TODO: Replace with data for token
-        $output['token'] = JWT::encode($token, $this->config->item('jwt_key'));
+        $tokenData = array();
+        $tokenData['id'] = 1; //TODO: Replace with data for token
+        $output['token'] = AUTHORIZATION::generateToken($tokenData);
         $this->set_response($output, REST_Controller::HTTP_OK);
     }
 
@@ -42,7 +42,7 @@ class Auth extends REST_Controller
         $headers = $this->input->request_headers();
 
         if (array_key_exists('Authorization', $headers) && !empty($headers['Authorization'])) {
-            $decodedToken = JWT::decode($headers['Authorization'], $this->config->item('jwt_key'));
+            $decodedToken = AUTHORIZATION::validateToken($headers['Authorization']);
             if ($decodedToken != false) {
                 $this->set_response($decodedToken, REST_Controller::HTTP_OK);
                 return;
