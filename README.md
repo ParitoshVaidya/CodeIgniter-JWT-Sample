@@ -2,6 +2,14 @@
 
 Simple Codeigniter, REST Server, JWT implementation.
 
+**Update**
+
+As per multiple requests, I am adding logic for timeout.  
+Please check ```application\controllers\Authtimeout.php``` for more details.
+
+**Note:** I did not add logic for expired token replacement after timeout.
+
+
 Setup
 =====
 
@@ -23,6 +31,12 @@ $config['encryption_key'] = '';
 $config['jwt_key']	= '';
 ```
 
+* **For Timeout** `token_timeout` in `application\config\jwt.php`
+
+```
+$config['token_timeout']	= ;
+```
+
 Run
 =====
 
@@ -37,6 +51,18 @@ Check decoded token
     Method: POST
     Header Key: Authorization
     Value: Auth token generated in GET call
+    
+GET auth token with **timeout**
+
+    URL: http://host/CodeIgniter-JWT-Sample/authtimeout/token
+    Method: GET
+
+Check decoded token with **timeout**
+
+    URL: http://host/CodeIgniter-JWT-Sample/authtimeout/token
+    Method: POST
+    Header Key: Authorization
+    Value: Auth token generated in GET call of authtimeout controller
 
 Project uses 
 =======
@@ -49,4 +75,4 @@ Contact
 For any questions mail me paritoshvaidya@gmail.com
   
   
-[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://raw.githubusercontent.com/chriskacerguis/codeigniter-restserver/master/LICENSE)
+[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://github.com/ParitoshVaidya/CodeIgniter-JWT-Sample/blob/master/license.txt)
