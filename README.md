@@ -10,8 +10,9 @@ Please check ```application\controllers\Authtimeout.php``` for more details.
 **Note:** I did not add logic for expired token replacement after timeout.
 
 
-Setup
+Setup using this repo
 =====
+
 
 Set up project on php server (XAMPP/Linux). 
 
@@ -36,6 +37,34 @@ $config['jwt_key']	= '';
 ```
 $config['token_timeout']	= ;
 ```
+
+
+Setup for existing projects
+=====
+
+
+You will need following files:
+
+**/application/config/jwt.php** <= Add **jwt_key** here
+**/application/helpers/authorization_helper.php
+/application/helpers/jwt_helper.php**
+
+In **/application/config/autoload.php** add 
+```
+$autoload['helper'] = array('url', 'form', 'jwt', "authorization");
+$autoload['config'] = array('jwt');
+```
+
+That's it. You are ready. Add your logic to generate token, eg.
+
+```
+$tokenData = array();
+$tokenData['id'] = 1; //TODO: Replace with data for token
+$output['token'] = AUTHORIZATION::generateToken($tokenData);
+```
+
+Please reply, if you need additional details. Happy coding!
+
 
 Run
 =====
