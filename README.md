@@ -2,6 +2,16 @@
 
 Simple Codeigniter, REST Server, JWT implementation.
 
+# Code upgrade
+
+I am planning to upgrade this repo with CI 4 and JWT token generation with 2 ways:
+
+1. Simple JWT token generation
+2. Full blown OAuth server with token expiry and related features
+
+**Expecting your inputs / PRs about changes**
+
+
 **Update**
 
 As per multiple requests, I am adding logic for timeout.  
