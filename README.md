@@ -1,24 +1,24 @@
-# CodeIgniter-JWT-Sample
+# CodeIgniter-JWT-Sample using CodeIgniter 4
 
-Simple Codeigniter, REST Server, JWT implementation.
+Simple Codeigniter 4, REST Server, JWT implementation.
 
-# Code upgrade to CI 4
-
-
-I am planning to upgrade this repo with CI 4 and JWT token generation with 2 ways:
-
-1. Simple JWT token generation
-2. Full blown OAuth server with token expiry and related features
-
-Expecting your inputs for changes
+Developers who want to use CodeIgniter 3:
 ---
+Use following command to switch to CodeIgniter 3 branch
 
-**Update**
+    git checkout CI3
+
+
+**Update 1**
 
 As per multiple requests, I am adding logic for timeout.  
 Please check ```application\controllers\Authtimeout.php``` for more details.
 
 **Note:** I did not add logic for expired token replacement after timeout.
+
+**Update 2**
+
+I upgraded CodeIgniter to v4. The old code (CodeIgniter 3) is available on branch CI3.
 
 
 Setup using this repo
