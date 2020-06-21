@@ -39,6 +39,7 @@
 
 namespace CodeIgniter\Email;
 
+use CodeIgniter\Events\Events;
 use Config\Mimes;
 
 /**
@@ -592,6 +593,7 @@ class Email
 	 */
 	public function setSubject($subject)
 	{
+		$this->subject = $subject;
 		$subject = $this->prepQEncoding($subject);
 		$this->setHeader('Subject', $subject);
 		return $this;
@@ -1530,8 +1532,7 @@ class Email
 		{
 			$this->setReplyTo($this->headers['From']);
 		}
-		if (empty($this->recipients) && ! isset($this->headers['To']) && empty($this->BCCArray) && ! isset($this->headers['Bcc']) && ! isset($this->headers['Cc'])
-		)
+		if (empty($this->recipients) && ! isset($this->headers['To']) && empty($this->BCCArray) && ! isset($this->headers['Bcc']) && ! isset($this->headers['Cc']))
 		{
 			$this->setErrorMessage(lang('Email.noRecipients'));
 			return false;
@@ -1548,10 +1549,16 @@ class Email
 		}
 		$this->buildMessage();
 		$result = $this->spoolEmail();
-		if ($result && $autoClear)
+		if ($result)
 		{
-			$this->clear();
+			if ($autoClear)
+			{
+				$this->clear();
+			}
+
+			Events::trigger('email', get_object_vars($this));
 		}
+
 		return $result;
 	}
 	//--------------------------------------------------------------------
@@ -1595,6 +1602,8 @@ class Email
 			$this->buildMessage();
 			$this->spoolEmail();
 		}
+
+		Events::trigger('email', $this->printDebugger());
 	}
 	//--------------------------------------------------------------------
 	/**

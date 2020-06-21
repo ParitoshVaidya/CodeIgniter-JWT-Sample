@@ -2,6 +2,7 @@
 
 use BadMethodCallException;
 use CodeIgniter\Config\Config;
+use CodeIgniter\Database\BaseBuilder;
 use CodeIgniter\Database\Exceptions\DataException;
 use CodeIgniter\Entity;
 use CodeIgniter\I18n\Time;
@@ -663,6 +664,63 @@ class ModelTest extends CIDatabaseTestCase
 		$errors = $model->errors();
 
 		$this->assertEquals('You forgot to name the baby.', $errors['name']);
+	}
+
+	//--------------------------------------------------------------------
+
+	public function testValidationWithSetValidationRule()
+	{
+		$model = new ValidModel($this->db);
+
+		$data = [
+			'name'        => 'some name',
+			'description' => 'some great marketing stuff',
+		];
+
+		$model->setValidationRule('description', [
+			'rules'  => 'required|min_length[50]',
+			'errors' => [
+				'min_length' => 'Description is too short baby.',
+			],
+		]);
+		$this->assertFalse($model->insert($data));
+
+		$errors = $model->errors();
+
+		$this->assertEquals('Description is too short baby.', $errors['description']);
+	}
+
+	//--------------------------------------------------------------------
+
+	public function testValidationWithSetValidationRules()
+	{
+		$model = new ValidModel($this->db);
+
+		$data = [
+			'name'        => '',
+			'description' => 'some great marketing stuff',
+		];
+
+		$model->setValidationRules([
+			'name'        => [
+				'rules'  => 'required',
+				'errors' => [
+					'required' => 'Give me a name baby.',
+				],
+			],
+			'description' => [
+				'rules'  => 'required|min_length[50]',
+				'errors' => [
+					'min_length' => 'Description is too short baby.',
+				],
+			],
+		]);
+		$this->assertFalse($model->insert($data));
+
+		$errors = $model->errors();
+
+		$this->assertEquals('Give me a name baby.', $errors['name']);
+		$this->assertEquals('Description is too short baby.', $errors['description']);
 	}
 
 	//--------------------------------------------------------------------
@@ -1468,6 +1526,32 @@ class ModelTest extends CIDatabaseTestCase
 
 	//--------------------------------------------------------------------
 
+	public function testPaginateWithDeleted()
+	{
+		$model = new UserModel($this->db);
+		$model->delete(1);
+
+		$data = $model->withDeleted()->paginate();
+
+		$this->assertEquals(4, count($data));
+		$this->assertEquals(4, $model->pager->getDetails()['total']);
+	}
+
+	//--------------------------------------------------------------------
+
+	public function testPaginateWithoutDeleted()
+	{
+		$model = new UserModel($this->db);
+		$model->delete(1);
+
+		$data = $model->withDeleted(false)->paginate();
+
+		$this->assertEquals(3, count($data));
+		$this->assertEquals(3, $model->pager->getDetails()['total']);
+	}
+
+	//--------------------------------------------------------------------
+
 	public function testValidationByObject()
 	{
 		$model = new ValidModel($this->db);
@@ -1741,7 +1825,7 @@ class ModelTest extends CIDatabaseTestCase
 
 	//--------------------------------------------------------------------
 
-	public function testInsertWithNoDataException()
+	public function testInsertArrayWithNoDataException()
 	{
 		$model = new UserModel();
 		$data  = [];
@@ -1752,7 +1836,7 @@ class ModelTest extends CIDatabaseTestCase
 
 	//--------------------------------------------------------------------
 
-	public function testUpdateWithNoDataException()
+	public function testUpdateArrayWithNoDataException()
 	{
 		$model = new EventModel();
 
@@ -1766,6 +1850,40 @@ class ModelTest extends CIDatabaseTestCase
 		$id = $model->insert($data);
 
 		$data = [];
+
+		$this->expectException(DataException::class);
+		$this->expectExceptionMessage('There is no data to update.');
+
+		$model->update($id, $data);
+	}
+
+	//--------------------------------------------------------------------
+
+	public function testInsertObjectWithNoDataException()
+	{
+		$model = new UserModel();
+		$data  = new \stdClass();
+		$this->expectException(DataException::class);
+		$this->expectExceptionMessage('There is no data to insert.');
+		$model->insert($data);
+	}
+
+	//--------------------------------------------------------------------
+
+	public function testUpdateObjectWithNoDataException()
+	{
+		$model = new EventModel();
+
+		$data = (object) [
+							 'name'    => 'Foo',
+							 'email'   => 'foo@example.com',
+							 'country' => 'US',
+							 'deleted' => 0,
+						 ];
+
+		$id = $model->insert($data);
+
+		$data = new \stdClass();
 
 		$this->expectException(DataException::class);
 		$this->expectExceptionMessage('There is no data to update.');
@@ -1981,6 +2099,94 @@ class ModelTest extends CIDatabaseTestCase
 		$model->delete(1);
 		$this->assertEquals(4, $model->withDeleted()->countAllResults());
 		$this->assertEquals(3, $model->countAllResults());
+	}
+
+	public function testcountAllResultsFalseWithDeletedTrue()
+	{
+		$builder     = new BaseBuilder('user', $this->db);
+		$expectedSQL = $builder->testMode()->countAllResults();
+
+		$model = new UserModel($this->db);
+		$model->delete(1);
+
+		$this->assertEquals(4, $model->withDeleted()->countAllResults(false));
+
+		$this->assertEquals($expectedSQL, (string)$this->db->getLastQuery());
+
+		$this->assertFalse($this->getPrivateProperty($model, 'tempUseSoftDeletes'));
+
+		$this->assertEquals(4, $model->countAllResults());
+
+		$this->assertEquals($expectedSQL, (string)$this->db->getLastQuery());
+
+		$this->assertTrue($this->getPrivateProperty($model, 'tempUseSoftDeletes'));
+	}
+
+	public function testcountAllResultsFalseWithDeletedFalse()
+	{
+		$builder     = new BaseBuilder('user', $this->db);
+		$expectedSQL = $builder->testMode()->where('user.deleted_at', null)->countAllResults();
+
+		$model = new UserModel($this->db);
+		$model->delete(1);
+
+		$this->assertEquals(3, $model->withDeleted(false)->countAllResults(false));
+
+		$this->assertEquals($expectedSQL, (string)$this->db->getLastQuery());
+
+		$this->assertFalse($this->getPrivateProperty($model, 'tempUseSoftDeletes'));
+
+		$this->assertEquals(3, $model->countAllResults());
+
+		$this->assertEquals($expectedSQL, (string)$this->db->getLastQuery());
+
+		$this->assertTrue($this->getPrivateProperty($model, 'tempUseSoftDeletes'));
+	}
+
+	public function testcountAllResultsFalseWithDeletedTrueUseSoftDeletesFalse()
+	{
+		$builder     = new BaseBuilder('user', $this->db);
+		$expectedSQL = $builder->testMode()->countAllResults();
+
+		$model = new UserModel($this->db);
+		$model->delete(1);
+
+		$this->setPrivateProperty($model, 'useSoftDeletes', false);
+
+		$this->assertEquals(4, $model->withDeleted()->countAllResults(false));
+
+		$this->assertEquals($expectedSQL, (string)$this->db->getLastQuery());
+
+		$this->assertFalse($this->getPrivateProperty($model, 'tempUseSoftDeletes'));
+
+		$this->assertEquals(4, $model->countAllResults());
+
+		$this->assertEquals($expectedSQL, (string)$this->db->getLastQuery());
+
+		$this->assertFalse($this->getPrivateProperty($model, 'tempUseSoftDeletes'));
+	}
+
+	public function testcountAllResultsFalseWithDeletedFalseUseSoftDeletesFalse()
+	{
+		$builder     = new BaseBuilder('user', $this->db);
+		$expectedSQL = $builder->testMode()->where('user.deleted_at', null)->countAllResults();
+
+		$model = new UserModel($this->db);
+		$model->delete(1);
+
+		$this->setPrivateProperty($model, 'useSoftDeletes', false);
+
+		$this->assertEquals(3, $model->withDeleted(false)->countAllResults(false));
+
+		$this->assertEquals($expectedSQL, (string)$this->db->getLastQuery());
+
+		$this->assertFalse($this->getPrivateProperty($model, 'tempUseSoftDeletes'));
+
+		$this->assertEquals(3, $model->countAllResults());
+
+		$this->assertEquals($expectedSQL, (string)$this->db->getLastQuery());
+
+		$this->assertFalse($this->getPrivateProperty($model, 'tempUseSoftDeletes'));
 	}
 
 }

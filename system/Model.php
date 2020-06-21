@@ -695,6 +695,11 @@ class Model
 			$data = (array) $data;
 		}
 
+		if (empty($data))
+		{
+			throw DataException::forEmptyDataset('insert');
+		}
+
 		// Validate data before saving.
 		if ($this->skipValidation === false)
 		{
@@ -1381,6 +1386,37 @@ class Model
 	//--------------------------------------------------------------------
 
 	/**
+	 * Allows to set validation rules.
+	 * It could be used when you have to change default or override current validate rules.
+	 *
+	 * @param array $validationRules
+	 *
+	 * @return void
+	 */
+	public function setValidationRules(array $validationRules)
+	{
+		$this->validationRules = $validationRules;
+	}
+
+	//--------------------------------------------------------------------
+
+	/**
+	 * Allows to set field wise validation rules.
+	 * It could be used when you have to change default or override current validate rules.
+	 *
+	 * @param string       $field
+	 * @param string|array $fieldRules
+	 *
+	 * @return void
+	 */
+	public function setValidationRule(string $field, $fieldRules)
+	{
+		$this->validationRules[$field] = $fieldRules;
+	}
+
+	//--------------------------------------------------------------------
+
+	/**
 	 * Should validation rules be removed before saving?
 	 * Most handy when doing updates.
 	 *
@@ -1407,7 +1443,9 @@ class Model
 	 */
 	public function validate($data): bool
 	{
-		if ($this->skipValidation === true || empty($this->validationRules) || empty($data))
+		$rules = $this->getValidationRules();
+
+		if ($this->skipValidation === true || empty($rules) || empty($data))
 		{
 			return true;
 		}
@@ -1418,8 +1456,6 @@ class Model
 		{
 			$data = (array) $data;
 		}
-
-		$rules = $this->validationRules;
 
 		// ValidationRules can be either a string, which is the group name,
 		// or an array of rules.
@@ -1550,6 +1586,13 @@ class Model
 	{
 		$rules = $this->validationRules;
 
+		// ValidationRules can be either a string, which is the group name,
+		// or an array of rules.
+		if (is_string($rules))
+		{
+			$rules = $this->validation->loadRuleGroup($rules);
+		}
+
 		if (isset($options['except']))
 		{
 			$rules = array_diff_key($rules, array_flip($options['except']));
@@ -1591,7 +1634,15 @@ class Model
 		{
 			$this->builder()->where($this->table . '.' . $this->deletedField, null);
 		}
-		$this->tempUseSoftDeletes = $this->useSoftDeletes;
+
+		// When $reset === false, the $tempUseSoftDeletes will be
+		// dependant on $useSoftDeletes value because we don't
+		// want to add the same "where" condition for the second time
+		$this->tempUseSoftDeletes = ($reset === true)
+			? $this->useSoftDeletes
+			: ($this->useSoftDeletes === true
+				? false
+				: $this->useSoftDeletes);
 
 		return $this->builder()->testMode($test)->countAllResults($reset);
 	}

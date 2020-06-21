@@ -826,7 +826,7 @@ class RouteCollection implements RouteCollectionInterface
 		// Make sure we capture back-references
 		$id = '(' . trim($id, '()') . ')';
 
-		$methods = isset($options['only']) ? is_string($options['only']) ? explode(',', $options['only']) : $options['only'] : ['index', 'show', 'create', 'update', 'delete', 'new', 'edit'];
+		$methods = isset($options['only']) ? (is_string($options['only']) ? explode(',', $options['only']) : $options['only']) : ['index', 'show', 'create', 'update', 'delete', 'new', 'edit'];
 
 		if (isset($options['except']))
 		{
@@ -941,7 +941,7 @@ class RouteCollection implements RouteCollectionInterface
 		// Make sure we capture back-references
 		$id = '(' . trim($id, '()') . ')';
 
-		$methods = isset($options['only']) ? is_string($options['only']) ? explode(',', $options['only']) : $options['only'] : ['index', 'show', 'new', 'create', 'edit', 'update', 'remove', 'delete'];
+		$methods = isset($options['only']) ? (is_string($options['only']) ? explode(',', $options['only']) : $options['only']) : ['index', 'show', 'new', 'create', 'edit', 'update', 'remove', 'delete'];
 
 		if (isset($options['except']))
 		{
@@ -1277,7 +1277,7 @@ class RouteCollection implements RouteCollectionInterface
 	 */
 	protected function localizeRoute(string $route) :string
 	{
-		return strtr($route, ['{locale}' => Services::language()->getLocale()]);
+		return strtr($route, ['{locale}' => Services::request()->getLocale()]);
 	}
 
 	//--------------------------------------------------------------------
@@ -1348,7 +1348,7 @@ class RouteCollection implements RouteCollectionInterface
 			// the expected param type.
 			$pos = strpos($from, $pattern);
 
-			if (preg_match("|{$pattern}|", $params[$index]))
+			if (preg_match('#' . $pattern . '#', $params[$index]))
 			{
 				$from = substr_replace($from, $params[$index], $pos, strlen($pattern));
 			}
@@ -1439,18 +1439,22 @@ class RouteCollection implements RouteCollectionInterface
 			$from = str_ireplace(':' . $tag, $pattern, $from);
 		}
 
-		// If no namespace found, add the default namespace
-		if (is_string($to) && (strpos($to, '\\') === false || strpos($to, '\\') > 0))
+		//If is redirect, No processing
+		if (! isset($options['redirect']))
 		{
-			$namespace = $options['namespace'] ?? $this->defaultNamespace;
-			$to        = trim($namespace, '\\') . '\\' . $to;
-		}
+			// If no namespace found, add the default namespace
+			if (is_string($to) && (strpos($to, '\\') === false || strpos($to, '\\') > 0))
+			{
+				$namespace = $options['namespace'] ?? $this->defaultNamespace;
+				$to        = trim($namespace, '\\') . '\\' . $to;
+			}
 
-		// Always ensure that we escape our namespace so we're not pointing to
-		// \CodeIgniter\Routes\Controller::method.
-		if (is_string($to))
-		{
-			$to = '\\' . ltrim($to, '\\');
+			// Always ensure that we escape our namespace so we're not pointing to
+			// \CodeIgniter\Routes\Controller::method.
+			if (is_string($to))
+			{
+				$to = '\\' . ltrim($to, '\\');
+			}
 		}
 
 		$name = $options['as'] ?? $from;

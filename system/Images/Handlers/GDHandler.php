@@ -151,49 +151,9 @@ class GDHandler extends BaseHandler
 	{
 		$srcImg = $this->createImage();
 
-		$width  = $this->image()->origWidth;
-		$height = $this->image()->origHeight;
+		$angle = $direction === 'horizontal' ? IMG_FLIP_HORIZONTAL : IMG_FLIP_VERTICAL;
 
-		if ($direction === 'horizontal')
-		{
-			for ($i = 0; $i < $height; $i ++)
-			{
-				$left  = 0;
-				$right = $width - 1;
-
-				while ($left < $right)
-				{
-					$cl = imagecolorat($srcImg, $left, $i);
-					$cr = imagecolorat($srcImg, $right, $i);
-
-					imagesetpixel($srcImg, $left, $i, $cr);
-					imagesetpixel($srcImg, $right, $i, $cl);
-
-					$left ++;
-					$right --;
-				}
-			}
-		}
-		else
-		{
-			for ($i = 0; $i < $width; $i ++)
-			{
-				$top    = 0;
-				$bottom = $height - 1;
-
-				while ($top < $bottom)
-				{
-					$ct = imagecolorat($srcImg, $i, $top);
-					$cb = imagecolorat($srcImg, $i, $bottom);
-
-					imagesetpixel($srcImg, $i, $top, $cb);
-					imagesetpixel($srcImg, $i, $bottom, $ct);
-
-					$top ++;
-					$bottom --;
-				}
-			}
-		}
+		imageflip($srcImg, $angle);
 
 		$this->resource = $srcImg;
 
@@ -320,6 +280,16 @@ class GDHandler extends BaseHandler
 	{
 		$target = empty($target) ? $this->image()->getPathname() : $target;
 
+		// If no new resource has been created, then we're
+		// simply copy the existing one.
+		if (empty($this->resource))
+		{
+			$name = basename($target);
+			$path = pathinfo($target, PATHINFO_DIRNAME);
+
+			return $this->image()->copy($path, $name);
+		}
+
 		switch ($this->image()->imageType)
 		{
 			case IMAGETYPE_GIF:
@@ -421,6 +391,32 @@ class GDHandler extends BaseHandler
 				return imagecreatefrompng($path);
 			default:
 				throw ImageException::forInvalidImageCreate('Ima');
+		}
+	}
+
+	//--------------------------------------------------------------------
+
+	/**
+	 * Make the image resource object if needed
+	 */
+	protected function ensureResource()
+	{
+		if ($this->resource === null)
+		{
+			$path = $this->image()->getPathname();
+			// if valid image type, make corresponding image resource
+			switch ($this->image()->imageType)
+			{
+				case IMAGETYPE_GIF:
+					$this->resource = imagecreatefromgif($path);
+					break;
+				case IMAGETYPE_JPEG:
+					$this->resource = imagecreatefromjpeg($path);
+					break;
+				case IMAGETYPE_PNG:
+					$this->resource = imagecreatefrompng($path);
+					break;
+			}
 		}
 	}
 

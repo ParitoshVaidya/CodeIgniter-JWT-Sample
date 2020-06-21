@@ -321,7 +321,22 @@ class GDHandlerTest extends \CodeIgniter\Test\CIUnitTestCase
 
 	//--------------------------------------------------------------------
 
-	public function testImageSave()
+	public function testImageCopy()
+	{
+		foreach (['gif', 'jpeg', 'png'] as $type)
+		{
+			$this->handler->withFile($this->origin . 'ci-logo.' . $type);
+			$this->handler->save($this->start . 'work/ci-logo.' . $type);
+			$this->assertTrue($this->root->hasChild('work/ci-logo.' . $type));
+
+			$this->assertEquals(
+				file_get_contents($this->origin . 'ci-logo.' . $type),
+				$this->root->getChild('work/ci-logo.' . $type)->getContent()
+			);
+		}
+	}
+
+	public function testImageCompressionGetResource()
 	{
 		foreach (['gif', 'jpeg', 'png'] as $type)
 		{
@@ -329,6 +344,28 @@ class GDHandlerTest extends \CodeIgniter\Test\CIUnitTestCase
 			$this->handler->getResource(); // make sure resource is loaded
 			$this->handler->save($this->start . 'work/ci-logo.' . $type);
 			$this->assertTrue($this->root->hasChild('work/ci-logo.' . $type));
+
+			$this->assertNotEquals(
+				file_get_contents($this->origin . 'ci-logo.' . $type),
+				$this->root->getChild('work/ci-logo.' . $type)->getContent()
+			);
+		}
+	}
+
+	public function testImageCompressionWithResource()
+	{
+		foreach (['gif', 'jpeg', 'png'] as $type)
+		{
+			$this->handler->withFile($this->origin . 'ci-logo.' . $type)
+				->withResource() // make sure resource is loaded
+				->save($this->start . 'work/ci-logo.' . $type);
+
+			$this->assertTrue($this->root->hasChild('work/ci-logo.' . $type));
+
+			$this->assertNotEquals(
+				file_get_contents($this->origin . 'ci-logo.' . $type),
+				$this->root->getChild('work/ci-logo.' . $type)->getContent()
+			);
 		}
 	}
 
@@ -339,6 +376,40 @@ class GDHandlerTest extends \CodeIgniter\Test\CIUnitTestCase
 		$this->handler->convert(IMAGETYPE_PNG);
 		$this->handler->save($this->start . 'work/ci-logo.png');
 		$this->assertEquals(exif_imagetype($this->start . 'work/ci-logo.png'), IMAGETYPE_PNG);
+	}
+
+	public function testImageReorientLandscape()
+	{
+		for ($i = 0; $i <= 8; $i++)
+		{
+			$source = $this->origin . 'EXIFsamples/landscape_' . '' . $i . '.jpg';
+
+			$this->handler->withFile($source);
+			$this->handler->reorient();
+
+			$resource = $this->handler->getResource();
+			$point    = imagecolorat($resource, 0, 0);
+			$rgb      = imagecolorsforindex($resource, $point);
+
+			$this->assertEquals(['red' => 62, 'green' => 62, 'blue' => 62, 'alpha' => 0], $rgb);
+		}
+	}
+
+	public function testImageReorientPortrait()
+	{
+		for ($i = 0; $i <= 8; $i++)
+		{
+			$source = $this->origin . 'EXIFsamples/portrait_' . '' . $i . '.jpg';
+
+			$this->handler->withFile($source);
+			$this->handler->reorient();
+
+			$resource = $this->handler->getResource();
+			$point    = imagecolorat($resource, 0, 0);
+			$rgb      = imagecolorsforindex($resource, $point);
+
+			$this->assertEquals(['red' => 62, 'green' => 62, 'blue' => 62, 'alpha' => 0], $rgb);
+		}
 	}
 
 }

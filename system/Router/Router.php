@@ -411,6 +411,8 @@ class Router implements RouterInterface
 				? $key
 				: ltrim($key, '/ ');
 
+			$matchedKey = $key;
+
 			// Are we dealing with a locale?
 			if (strpos($key, '{locale}') !== false)
 			{
@@ -418,7 +420,8 @@ class Router implements RouterInterface
 
 				// Replace it with a regex so it
 				// will actually match.
-				$key = str_replace('{locale}', '[^/]+', $key);
+                $key = str_replace('/', '\/', $key);
+				$key = str_replace('{locale}', '[^\/]+', $key);
 			}
 
 			// Does the RegEx match?
@@ -427,7 +430,7 @@ class Router implements RouterInterface
 				// Is this route supposed to redirect to another?
 				if ($this->collection->isRedirect($key))
 				{
-					throw new RedirectException(key($val), $this->collection->getRedirectCode($key));
+					throw new RedirectException(is_array($val) ? key($val) : $val, $this->collection->getRedirectCode($key));
 				}
 				// Store our locale so CodeIgniter object can
 				// assign it to the Request.
@@ -452,11 +455,11 @@ class Router implements RouterInterface
 					$this->params = $matches;
 
 					$this->matchedRoute = [
-						$key,
+						$matchedKey,
 						$val,
 					];
 
-					$this->matchedRouteOptions = $this->collection->getRoutesOptions($key);
+					$this->matchedRouteOptions = $this->collection->getRoutesOptions($matchedKey);
 
 					return true;
 				}
@@ -490,11 +493,11 @@ class Router implements RouterInterface
 				$this->setRequest(explode('/', $val));
 
 				$this->matchedRoute = [
-					$key,
+					$matchedKey,
 					$val,
 				];
 
-				$this->matchedRouteOptions = $this->collection->getRoutesOptions($key);
+				$this->matchedRouteOptions = $this->collection->getRoutesOptions($matchedKey);
 
 				return true;
 			}
@@ -534,7 +537,7 @@ class Router implements RouterInterface
 		// has already been set.
 		if (! empty($segments))
 		{
-			$this->method = array_shift($segments);
+			$this->method = array_shift($segments) ?: $this->method;
 		}
 
 		if (! empty($segments))

@@ -65,6 +65,64 @@ class URITest extends \CodeIgniter\Test\CIUnitTestCase
 
 	//--------------------------------------------------------------------
 
+	public function testSegmentOutOfRangeWithSilent()
+	{
+		$url = 'http://abc.com/a123/b/c';
+		$uri = new URI($url);
+		$this->assertEquals('', $uri->setSilent()->getSegment(22));
+	}
+
+	//--------------------------------------------------------------------
+
+	public function testSegmentOutOfRangeWithDefaultValue()
+	{
+		$this->expectException(HTTPException::class);
+		$url = 'http://abc.com/a123/b/c';
+		$uri = new URI($url);
+		$uri->getSegment(22, 'something');
+	}
+
+	//--------------------------------------------------------------------
+
+	public function testSegmentOutOfRangeWithSilentAndDefaultValue()
+	{
+		$url = 'http://abc.com/a123/b/c';
+		$uri = new URI($url);
+		$this->assertEquals('something', $uri->setSilent()->getSegment(22, 'something'));
+	}
+
+	//--------------------------------------------------------------------
+
+	public function testSegmentsWithDefaultValueAndSilent()
+	{
+		$uri = new URI('http://hostname/path/to');
+		$uri->setSilent();
+
+		$this->assertEquals(['path', 'to'], $uri->getSegments());
+		$this->assertEquals('path', $uri->getSegment(1));
+		$this->assertEquals('to', $uri->getSegment(2, 'different'));
+		$this->assertEquals('script', $uri->getSegment(3, 'script'));
+		$this->assertEquals('', $uri->getSegment(3));
+
+		$this->assertEquals(2, $uri->getTotalSegments());
+	}
+
+	//--------------------------------------------------------------------
+
+	public function testSegmentOutOfRangeWithDefaultValuesAndSilent()
+	{
+		$uri = new URI('http://hostname/path/to/script');
+		$uri->setSilent();
+
+		$this->assertEquals('', $uri->getSegment(22));
+		$this->assertEquals('something', $uri->getSegment(33, 'something'));
+
+		$this->assertEquals(3, $uri->getTotalSegments());
+		$this->assertEquals(['path', 'to', 'script'], $uri->getSegments());
+	}
+
+	//--------------------------------------------------------------------
+
 	public function testCanCastAsString()
 	{
 		$url = 'http://username:password@hostname:9090/path?arg=value#anchor';
@@ -225,6 +283,18 @@ class URITest extends \CodeIgniter\Test\CIUnitTestCase
 
 	//--------------------------------------------------------------------
 
+	public function testSetPortInvalidValuesSilent()
+	{
+		$url = 'http://example.com/path';
+		$uri = new URI($url);
+
+		$uri->setSilent()->setPort(70000);
+
+		$this->assertEquals(null, $uri->getPort());
+	}
+
+	//--------------------------------------------------------------------
+
 	public function testSetPortTooSmall()
 	{
 		$url = 'http://example.com/path';
@@ -368,6 +438,18 @@ class URITest extends \CodeIgniter\Test\CIUnitTestCase
 
 		$this->expectException(HTTPException::class);
 		$uri->setQuery('?key=value#fragment');
+	}
+
+	//--------------------------------------------------------------------
+
+	public function testSetQueryThrowsErrorWhenFragmentPresentSilent()
+	{
+		$url = 'http://example.com/path';
+		$uri = new URI($url);
+
+		$uri->setSilent()->setQuery('?key=value#fragment');
+
+		$this->assertEquals('', $uri->getQuery());
 	}
 
 	//--------------------------------------------------------------------
@@ -783,6 +865,18 @@ class URITest extends \CodeIgniter\Test\CIUnitTestCase
 		$uri->setSegment(6, 'banana');
 	}
 
+	public function testSetBadSegmentSilent()
+	{
+		$base = 'http://example.com/foo/bar/baz';
+
+		$uri = new URI($base);
+
+		$segments = $uri->getSegments();
+		$uri->setSilent()->setSegment(6, 'banana');
+
+		$this->assertEquals($segments, $uri->getSegments());
+	}
+
 	//--------------------------------------------------------------------
 	// Exploratory testing, investigating https://github.com/codeigniter4/CodeIgniter4/issues/2016
 
@@ -854,6 +948,26 @@ class URITest extends \CodeIgniter\Test\CIUnitTestCase
 		$uri = new URI($url);
 		$this->assertEquals([], $uri->getSegments());
 		$this->assertEquals(0, $uri->getTotalSegments());
+	}
+
+	public function testSetURI()
+	{
+		$url = ':';
+		$uri = new URI();
+
+		$this->expectException(HTTPException::class);
+		$this->expectExceptionMessage(lang('HTTP.cannotParseURI', [$url]));
+
+		$uri->setURI($url);
+	}
+
+	public function testSetURISilent()
+	{
+		$url = ':';
+		$uri = new URI();
+		$uri->setSilent()->setURI($url);
+
+		$this->assertTrue(true);
 	}
 
 }
