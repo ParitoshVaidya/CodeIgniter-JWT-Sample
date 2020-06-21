@@ -10,15 +10,12 @@ class User extends ResourceController
 
 	public function index()
 	{
-		$authHeader = $this->request->getServer('HTTP_AUTHORIZATION');
-		$arr        = explode(' ', $authHeader);
+		// fetch records from db as per requirements
+		$exampleUser = [
+			'name' => 'example user',
+			'address' => 'example address'
+		];
 
-		$token = $arr[1];
-
-		$key = Services::getSecretKey();
-
-		$decoded = JWT::decode($token, $key, ['HS256']);
-
-		return $this->respond($decoded, 200);
+		return $this->respond($exampleUser, 200);
 	}
 }

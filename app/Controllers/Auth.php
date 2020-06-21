@@ -16,14 +16,13 @@ class Auth extends ResourceController
 		 * https://auth0.com/docs/tokens/concepts/jwt-claims#reserved-claims
 		 */
 
-		$email    = $this->request->getPost('email');
+		$email = $this->request->getPost('email');
 		$password = $this->request->getPost('password');
 
 		// add code to fetch through db and check they are valid
 		// sending no email and password also works here because both are empty
-		if ($email === $password)
-		{
-			$key     = Services::getSecretKey();
+		if ($email === $password) {
+			$key = Services::getSecretKey();
 			$payload = [
 				'aud' => 'http://example.com',
 				'iat' => 1356999524,

@@ -1,3 +1,115 @@
+# CodeIgniter-JWT-Sample using CodeIgniter 4
+
+Simple CodeIgniter 4 JWT implementation.
+
+##Developers who want to use CodeIgniter 3:
+
+Use following command to switch to CodeIgniter 3 branch
+
+    git checkout CI3
+
+##Setup using this repo
+
+- Clone this project on php server XAMPP/WAMP. 
+
+- This project uses [Composer] (https://getcomposer.org/) as Dependency Manager
+
+- Use following command to auto install required dependencies
+
+
+    composer install
+
+- In `/app/Config/Services.php` change `secret key` at `line 23`
+
+- Run or Test code using **Postman** or any other Rest Client
+
+##Setup for existing CodeIgniter 4 project
+
+- Use composer to manage your dependencies and download PHP-JWT:
+  
+ ```bash
+  composer require firebase/php-jwt
+  ```
+
+- [Filter] (https://codeigniter.com/user_guide/incoming/filters.html)
+
+Copy `app/Filters/AuthFilter.php` to your project
+
+In `/app/Config/Filters.php` add following line at the end of `$aliases` array
+
+```
+'authFilter' => \App\Filters\AuthFilter::class,
+```
+Add following in `$filters` array
+
+```
+'authFilter' => [
+    'before' => [
+        'api/user/*',
+        'api/user',
+    ],
+],
+```
+
+- In `/app/Config/Routes.php` add routes to your Auth controller and resource
+
+```
+$routes->resource('api/auth', ['controller' => 'Auth']);
+$routes->resource('api/user', ['controller' => 'User']);
+```
+    
+- In `/app/Config/Services.php` add function to return secret key
+```
+public static function getSecretKey()
+{
+    return 'example_key';
+}
+```
+- Add logic to generate token in your `AuthController` after validating login credentials
+```
+$key = Services::getSecretKey();
+$payload = array(
+    "iss" => "http://example.org",
+    "aud" => "http://example.com",
+    "iat" => 1356999524,
+    "nbf" => 1357000000
+);
+
+$jwt = JWT::encode($payload, $key);
+```
+- Run or Test code using **Postman** or any other Rest Client
+
+
+##Run
+
+Generate auth token using login credentials
+
+    URL: http://localhost/CodeIgniter-JWT-Sample/public/index.php/api/auth
+    Method: POST
+    Params type: x-www-form-urlencoded
+    Params: email:same_text
+            password:same_text
+
+Access resource - User for this example
+
+    URL: http://localhost/CodeIgniter-JWT-Sample/public/index.php/api/user
+    Method: GET
+    Header Key: Authorization
+    Value: Bearer <Token value from above call>
+    
+##Project uses 
+[CodeIgniter 4] (https://www.codeigniter.com/)  
+[php-jwt] (https://github.com/firebase/php-jwt)  
+
+##Contact
+For any questions mail me paritoshvaidya@gmail.com
+  
+[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://github.com/ParitoshVaidya/CodeIgniter-JWT-Sample/blob/master/license.txt)
+
+
+<!--
+Original ReadMe
+
 # CodeIgniter 4 Development
 
 [![Build Status](https://travis-ci.org/codeigniter4/CodeIgniter4.svg?branch=develop)](https://travis-ci.org/codeigniter4/CodeIgniter4)
@@ -98,3 +210,5 @@ Additionally, make sure that the following extensions are enabled in your PHP:
 ## Running CodeIgniter Tests
 
 Information on running the CodeIgniter test suite can be found in the [README.md](tests/README.md) file in the tests directory.
+
+-->
