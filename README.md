@@ -2,13 +2,15 @@
 
 Simple CodeIgniter 4 JWT implementation.
 
-##Developers who want to use CodeIgniter 3:
+Developers who want to use CodeIgniter 3:
+=====
 
 Use following command to switch to CodeIgniter 3 branch
 
     git checkout CI3
 
-##Setup using this repo
+Setup using this repo
+=====
 
 - Clone this project on php server XAMPP/WAMP. 
 
@@ -23,7 +25,8 @@ Use following command to switch to CodeIgniter 3 branch
 
 - Run or Test code using **Postman** or any other Rest Client
 
-##Setup for existing CodeIgniter 4 project
+Setup for existing CodeIgniter 4 project
+=====
 
 - Use composer to manage your dependencies and download PHP-JWT:
   
@@ -80,7 +83,8 @@ $jwt = JWT::encode($payload, $key);
 - Run or Test code using **Postman** or any other Rest Client
 
 
-##Run
+Run
+=====
 
 Generate auth token using login credentials
 
@@ -97,11 +101,13 @@ Access resource - User for this example
     Header Key: Authorization
     Value: Bearer <Token value from above call>
     
-##Project uses 
+Project uses
+===== 
 [CodeIgniter 4] (https://www.codeigniter.com/)  
 [php-jwt] (https://github.com/firebase/php-jwt)  
 
-##Contact
+Contact
+=====
 For any questions mail me paritoshvaidya@gmail.com
   
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://github.com/ParitoshVaidya/CodeIgniter-JWT-Sample/blob/master/license.txt)
